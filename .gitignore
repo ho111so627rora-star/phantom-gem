@@ -19,3 +19,10 @@ Thumbs.db
 .pages-build/
 supabase/functions/jewel-rooms/index.ts
 supabase/.temp/
+
+# Xcode/Capacitor local build output and per-user state (the project itself is tracked)
+ios/App/build/
+ios/App/DerivedData/
+ios/**/*.xcuserstate
+ios/**/xcuserdata/
+ios/App/Pods/
