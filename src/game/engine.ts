@@ -25,7 +25,15 @@ export function values(game: Game, color: Color): number[] {
 // A duplicate 1 (or the last available number) remains playable so a hand cannot deadlock.
 export function selectableValues(game: Game, color: Color, other: Play | null): number[] {
   const available = values(game, color);
-  return available.filter(value => value === 1 || available.length === 1 || other?.kind !== color || other.value !== value);
+  const filtered = available.filter(value => value === 1 || available.length === 1 || other?.kind !== color || other.value !== value);
+  // Only one number left to claim, and it's already sold: let the paired same-color die use 1 instead of forcing a self-duplicate.
+  if (available.length === 1 && available[0] !== 1 && other?.kind === color && game.market[color][0] !== null) return [...filtered, 1];
+  return filtered;
+}
+// A jewel is slot-free (scores a flat 1 point, doesn't occupy/vacate a market slot) once the whole
+// color is sold out, or once its own value-1 slot is sold (the paired-duplicate escape hatch).
+function isSlotFree(source: Game, color: Color, value: number): boolean {
+  return source.market[color].every(Boolean) || (value === 1 && source.market[color][0] !== null);
 }
 export function score(player: Player, final = false) {
   const base = player.jewels.reduce((s, j) => s + j.value, 0);
@@ -51,7 +59,13 @@ export function validateSelection(game: Game, playerId: string, selection: Selec
   if (enforceDuplicateChoice && selected.some((play, i) => isJewel(play.kind) && !selectableValues(game, play.kind, selected[1 - i] || null).includes(play.value))) throw new Error('同じ色の2〜6は左右で別の数字を選んでください');
   for (const play of selected) {
     const die = player.bag.find(d => d.id === play.id);
-    if (!die || die.kind !== play.kind || (isJewel(play.kind) ? !values(game, play.kind).includes(play.value) : play.value !== 0)) throw new Error('無効なサイコロまたは数字です');
+    if (!die || die.kind !== play.kind) throw new Error('無効なサイコロまたは数字です');
+    if (!isJewel(play.kind)) { if (play.value !== 0) throw new Error('無効なサイコロまたは数字です'); continue; }
+    const legalValues = values(game, play.kind);
+    if (legalValues.includes(play.value)) continue;
+    const pairedSameColor = selected.some(p => p !== play && p.kind === play.kind);
+    if (play.value === 1 && pairedSameColor && legalValues.length === 1 && game.market[play.kind][0] !== null) continue;
+    throw new Error('無効なサイコロまたは数字です');
   }
 }
 
@@ -106,9 +120,9 @@ export function resolveTurn(source: Game, selections: Game['selections'], random
         if (isJewel(play.kind)) {
           if (enemy?.kind === 'thief') {
             game.visualEvents!.push({ type: 'thief', player: opponent.id, from: player.id, die: play });
-            game.pendingAwards.push({ player: opponent.id, play, postSellout: source.market[play.kind].every(Boolean) });
+            game.pendingAwards.push({ player: opponent.id, play, postSellout: isSlotFree(source, play.kind, play.value) });
             game.logs.push(`${opponent.name}の泥棒！ ${player.name}の${LABELS[play.kind]} ${play.value}を獲得。`);
-          } else if (!doubles.has(player.id)) game.pendingAwards.push({ player: player.id, play, postSellout: source.market[play.kind].every(Boolean) });
+          } else if (!doubles.has(player.id)) game.pendingAwards.push({ player: player.id, play, postSellout: isSlotFree(source, play.kind, play.value) });
           else {
             game.miningBag.push({ id: play.id, kind: play.kind });
             game.visualEvents!.push({ type: 'collision', player: player.id, die: play });

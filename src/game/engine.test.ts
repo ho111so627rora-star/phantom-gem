@@ -187,6 +187,24 @@ describe('ゲームエンジン', () => {
     expect(r.players[0].bag).toHaveLength(0);
     expect(r.miningBag).toHaveLength(18);
   });
+  it('1が完売済みで残り1数字のみのとき、同色ペアは1をもう一方に選んで自滅ゾロ目を避けられる',()=>{
+    const g=createGame([],1);g.market.ruby.fill('p1');g.market.ruby[5]=null;
+    const six=play(g,0,'ruby',6), one=play(g,0,'ruby',1,1);
+    expect(selectableValues(g,'ruby',six)).toEqual(expect.arrayContaining([1]));
+    expect(()=>validateSelection(g,'p0',[six,one])).not.toThrow();
+    const s=selections(g);s.p0=[six,one];
+    const r=resolveTurn(g,s,rng);
+    expect(r.players[0].jewels.map(j=>j.value).sort()).toEqual([1,6]);
+  });
+  it('数字が2つ以上残っているときは1を余分な選択肢として提示しない',()=>{
+    const g=createGame([],1);g.market.ruby[0]='p1';
+    const three=play(g,0,'ruby',3);
+    expect(selectableValues(g,'ruby',three)).not.toContain(1);
+  });
+  it('同色の相方がいない単独出しでは、1が埋まっていても残り数字のみ選べる',()=>{
+    const g=createGame([],1);g.market.ruby.fill('p1');g.market.ruby[5]=null;
+    expect(selectableValues(g,'ruby',null)).toEqual([6]);
+  });
   it('1・1を泥棒2個に盗まれても手持ちへ戻らず、獲得できない2個目は採掘場へ',()=>{
     const g=createGame([],1),s=selections(g);
     s.p0=[play(g,0,'ruby',1),play(g,0,'ruby',1,1)];
