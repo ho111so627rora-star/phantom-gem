@@ -1,5 +1,5 @@
 'use client';
-import { roomFetch, homePath } from '../lib/api';
+import { roomFetch, homePath, basePath } from '../lib/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircleHelp, LogOut, Gem as GemIcon, X, ArrowLeft } from 'lucide-react';
 import type { RoomView, Session } from '../server/types';
@@ -65,7 +65,7 @@ export default function Page() {
   return <div className={`app-shell ${room?.game ? 'at-the-table' : 'front-room'}`}><header className="site-header"><button className="brand" onClick={() => session ? setLeave(true) : home()} aria-label="ファントムジェム ホーム"><GemIcon /><span>PHANTOM GEM<small>ファントムジェム</small></span></button><div className="header-actions"><Bgm />{room && <span className="header-room">ROOM <b>{room.code}</b></span>}<button className="help-button" aria-label="遊び方" onClick={() => setRules(true)}><CircleHelp /><span>遊び方</span></button>{session && <button className="icon-button" onClick={() => setLeave(true)} aria-label="ホームに戻る"><LogOut /></button>}</div></header>
     {error && <div className="error-banner" role="alert">{error}<button className="icon-button" onClick={() => setError('')} aria-label="通知を閉じる"><X /></button></div>}
     {!session ? <Home onSession={saveSession} onRules={() => setRules(true)} /> : !room ? <main className="loading"><GemIcon /><h2>テーブルに接続しています…</h2><button className="text-button" onClick={home}><ArrowLeft />ホームへ戻る</button></main> : !room.game ? <Lobby room={room} act={act} busy={busy} /> : <GameBoard room={room} act={act} busy={busy} revealing={revealing} />}
-    <footer className="site-footer"><span>PHANTOM GEM</span><span>1〜4人のカップと宝石のゲーム</span></footer>
+    <footer className="site-footer"><span>PHANTOM GEM</span><span>1〜4人のカップと宝石のゲーム</span><span className="footer-links"><a href={basePath + '/support/'}>サポート</a><a href={basePath + '/privacy/'}>プライバシーポリシー</a></span></footer>
     {rules && <Rules onClose={() => setRules(false)} />}
     {leave && <div className="modal-backdrop"><section className="modal leave-modal" role="dialog" aria-modal="true" aria-labelledby="leave-title"><h2 id="leave-title">ホームに戻りますか？</h2><p>ホームに戻ると、この対戦への参加情報は消えます。対戦を続ける場合は「ゲームを続ける」を選んでください。</p><button className="primary" onClick={home}>ホームへ戻る</button><button className="text-button" onClick={() => setLeave(false)}>ゲームを続ける</button></section></div>}
   </div>;

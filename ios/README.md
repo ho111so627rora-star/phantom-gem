@@ -31,6 +31,13 @@ CocoaPods は不要です（Capacitor 8 は Swift Package Manager を使うた�
    の流れでアップロードし、App Store Connect 側でスクリーンショット・説明文などを
    入力して審査に提出する。
 
+## App Store Connect 提出時の項目
+
+- **プライバシーポリシー URL**: https://ho111so627rora-star.github.io/phantom-gem/privacy/
+- **サポート URL**: https://ho111so627rora-star.github.io/phantom-gem/support/
+
+どちらもサイト本体（Next.js）の静的ページとして生成されるため、追加のホスティング作業は不要です。
+
 ## 変更が必要になりやすい項目
 
 - **`capacitor.config.ts` の `appId`**: 上記の通り、実際に登録した Bundle ID に置き換える。
