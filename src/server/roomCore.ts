@@ -5,8 +5,9 @@ import type { RoomView, Session } from './types';
 import { publicGame } from './publicGame';
 
 export type Seat = { id: string; token: string; name: string; color: Color; lastSeen: number };
-export type Room = { code: string; humanCount: number; mode?: 'standard' | 'duel'; seats: Seat[]; game: Game | null; locked: Record<string, Selection>; ready: string[]; revealAt?: number; beforeReveal?: Game; selectionDeadline?: number; timedOut?: string[] };
+export type Room = { code: string; humanCount: number; mode?: 'standard' | 'duel'; seats: Seat[]; game: Game | null; locked: Record<string, Selection>; ready: string[]; revealAt?: number; resolveAt?: number; beforeReveal?: Game; selectionDeadline?: number; timedOut?: string[] };
 export const REVEAL_DELAY_MS = 2800;
+export const INSPECT_DELAY_MS = 3200;
 export const THINK_TIME_MS = 60_000;
 export interface RoomStore { exists(code: string): boolean; read(code: string): Room; write(room: Room): void; }
 export function validateCode(code: string) { if (!/^[A-Z2-9]{6}$/.test(code)) throw new Error('ルームコードは6文字です'); }
@@ -48,7 +49,7 @@ function runCpuPoison(room: Room) {
 }
 function primeCpu(room: Room) {
   room.locked = {}; room.ready = [];
-  room.revealAt = undefined; room.beforeReveal = undefined;
+  room.revealAt = undefined; room.resolveAt = undefined; room.beforeReveal = undefined;
   room.game!.players.filter(p => p.cpu).forEach(p => { room.locked[p.id] = chooseCpu(room.game!, p.id, random); });
   room.selectionDeadline = Date.now() + THINK_TIME_MS; room.timedOut = [];
 }
@@ -57,6 +58,8 @@ function openCups(room: Room) {
   room.game!.selections = structuredClone(room.locked);
   room.game!.visualEvents = []; room.game!.phase = 'inspect';
   room.revealAt = Date.now() + REVEAL_DELAY_MS;
+  // Gives everyone a moment to actually read the opened cups before the board resolves on its own.
+  room.resolveAt = room.revealAt + INSPECT_DELAY_MS;
 }
 function enforceDeadline(room: Room) {
   if (room.game?.phase !== 'select') return;
@@ -72,9 +75,9 @@ function enforceDeadline(room: Room) {
   openCups(room);
 }
 function advanceInspect(room: Room) {
-  // Once every seat's cups have finished opening, the shared board (mining bag, collisions,
-  // scoring) resolves on its own — players only watch, they don't gate it with a tap.
-  if (room.game?.phase !== 'inspect' || !room.revealAt || Date.now() < room.revealAt) return;
+  // After everyone's had a moment to read the opened cups, the shared board (mining bag,
+  // collisions, scoring) resolves on its own — players only watch, they don't gate it with a tap.
+  if (room.game?.phase !== 'inspect' || !room.resolveAt || Date.now() < room.resolveAt) return;
   const source = structuredClone(room.game); source.phase = 'select';
   room.game = resolveTurn(source, room.locked, random); runCpuPoison(room);
 }
