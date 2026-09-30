@@ -201,6 +201,7 @@ export function createTable(canvas: HTMLCanvasElement, anchor: (id: string, x: n
         if (f.spin) f.object.rotation.set(t * Math.PI * 2, t * Math.PI * 3, t * 1.2);
       }
       const shaking = !!state.miningMixing;
+      treasure.group.rotation.y = currentAngle;
       treasure.group.rotation.z = shaking && !reduceMotion ? Math.sin(now * .035) * .045 : 0;
       chestContents.rotation.y = shaking && !reduceMotion ? now * .009 : 0;
       const lidTarget = shaking ? -.08 : mining ? -1.25 : -.2; treasure.hinge.rotation.x += (lidTarget - treasure.hinge.rotation.x) * .09;
