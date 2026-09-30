@@ -5,7 +5,7 @@ import type { RoomView, Session } from './types';
 import { publicGame } from './publicGame';
 
 export type Seat = { id: string; token: string; name: string; color: Color; lastSeen: number };
-export type Room = { code: string; humanCount: number; mode?: 'standard' | 'duel'; seats: Seat[]; game: Game | null; locked: Record<string, Selection>; ready: string[]; reviewed?: string[]; revealAt?: number; beforeReveal?: Game; selectionDeadline?: number; timedOut?: string[] };
+export type Room = { code: string; humanCount: number; mode?: 'standard' | 'duel'; seats: Seat[]; game: Game | null; locked: Record<string, Selection>; ready: string[]; revealAt?: number; beforeReveal?: Game; selectionDeadline?: number; timedOut?: string[] };
 export const REVEAL_DELAY_MS = 2800;
 export const THINK_TIME_MS = 60_000;
 export interface RoomStore { exists(code: string): boolean; read(code: string): Room; write(room: Room): void; }
@@ -47,7 +47,7 @@ function runCpuPoison(room: Room) {
   }
 }
 function primeCpu(room: Room) {
-  room.locked = {}; room.ready = []; room.reviewed = [];
+  room.locked = {}; room.ready = [];
   room.revealAt = undefined; room.beforeReveal = undefined;
   room.game!.players.filter(p => p.cpu).forEach(p => { room.locked[p.id] = chooseCpu(room.game!, p.id, random); });
   room.selectionDeadline = Date.now() + THINK_TIME_MS; room.timedOut = [];
@@ -71,9 +71,16 @@ function enforceDeadline(room: Room) {
   }
   openCups(room);
 }
+function advanceInspect(room: Room) {
+  // Once every seat's cups have finished opening, the shared board (mining bag, collisions,
+  // scoring) resolves on its own — players only watch, they don't gate it with a tap.
+  if (room.game?.phase !== 'inspect' || !room.revealAt || Date.now() < room.revealAt) return;
+  const source = structuredClone(room.game); source.phase = 'select';
+  room.game = resolveTurn(source, room.locked, random); runCpuPoison(room);
+}
 function getRoom(code: string, token: string): RoomView {
   const room = read(code), own = seat(room, token);
-  if (Date.now() - own.lastSeen >= 10_000) own.lastSeen = Date.now(); enforceDeadline(room); save(room);
+  if (Date.now() - own.lastSeen >= 10_000) own.lastSeen = Date.now(); enforceDeadline(room); advanceInspect(room); save(room);
   const waitingReveal = !!room.revealAt && Date.now() < room.revealAt;
   const game = room.game ? structuredClone(waitingReveal && room.beforeReveal ? room.beforeReveal : room.game) : null;
   if (waitingReveal && game) game.phase = 'reveal';
@@ -83,7 +90,7 @@ function getRoom(code: string, token: string): RoomView {
   const unusedColors = COLORS.filter(c => !room.seats.some(s => s.color === c));
   return {
     code, mode: room.mode || 'standard', humanCount: room.humanCount, me: own.id, host: own.id === 'p0', game: game ? publicGame(game, own.id) : null, revealAt: room.revealAt, serverNow: Date.now(),
-    locked: Object.keys(room.locked), ready: room.ready, reviewed: room.reviewed || [], selectionDeadline: room.selectionDeadline, timedOut: room.timedOut || [],
+    locked: Object.keys(room.locked), ready: room.ready, selectionDeadline: room.selectionDeadline, timedOut: room.timedOut || [],
     seats: COLORS.slice(0, room.mode === 'duel' ? 2 : 4).map((_, i) => {
       const s = room.seats[i];
       return { id: `p${i}`, name: s?.name || (i >= room.humanCount ? `CPU ${i - room.humanCount + 1}` : '参加を待っています'),
@@ -93,7 +100,7 @@ function getRoom(code: string, token: string): RoomView {
 }
 function act(code: string, token: string, action: string, payload: unknown) {
   const room = read(code), own = seat(room, token); own.lastSeen = Date.now();
-  enforceDeadline(room); save(room);
+  enforceDeadline(room); advanceInspect(room); save(room);
   if (room.revealAt && Date.now() < room.revealAt) throw new Error('全員のカップを公開するまでお待ちください');
   const data = (payload && typeof payload === 'object' ? payload : {}) as Record<string, unknown>;
   if (action === 'color') {
@@ -120,14 +127,6 @@ function act(code: string, token: string, action: string, payload: unknown) {
       room.locked[own.id] = selection;
       if (Object.keys(room.locked).length === room.game.players.length) {
         openCups(room);
-      }
-    } else if (action === 'resolve') {
-      if (room.game.phase !== 'inspect') throw new Error('公開されたカップを確認してから進んでください');
-      room.reviewed ||= [];
-      if (!room.reviewed.includes(own.id)) room.reviewed.push(own.id);
-      if (room.reviewed.length === room.humanCount) {
-        const source = structuredClone(room.game); source.phase = 'select';
-        room.game = resolveTurn(source, room.locked, random); runCpuPoison(room);
       }
     } else if (action === 'poison') {
       room.game = applyPoison(room.game, own.id, String(data.jewelId)); runCpuPoison(room);

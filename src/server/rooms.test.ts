@@ -25,8 +25,7 @@ describe('1分の思考時間', () => {
     expect(Object.keys(expired.game!.selections)).toEqual(['p0']);
     expect(expired.game!.players[0].jewels).toEqual([]);
     vi.advanceTimersByTime(REVEAL_DELAY_MS + 100_000);
-    expect(getRoom(host.code, host.token).game!.phase).toBe('inspect');
-    act(host.code, host.token, 'resolve', {});
+    expect(getRoom(host.code, host.token).game!.phase).not.toBe('inspect');
     const next = act(host.code, host.token, 'ready', {});
     expect(next.game!.turn).toBe(2); expect(next.selectionDeadline).toBe(Date.now() + THINK_TIME_MS);
     expect(next.timedOut).toEqual([]);

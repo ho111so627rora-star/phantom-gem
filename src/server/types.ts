@@ -5,7 +5,6 @@ export type RoomView = {
   seats: { id: string; name: string; color: Color; cpu: boolean; joined: boolean; online: boolean }[];
   game: Game | null;
   locked: string[]; ready: string[];
-  reviewed?: string[];
   selectionDeadline?: number;
   timedOut?: string[];
   revealAt?: number;
