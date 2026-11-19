@@ -1,4 +1,5 @@
 import { PieceIcon } from './table/PieceIcon';
+import { useI18n } from '../i18n';
 
 function LeatherCup({ className }: { className: string }) {
   return <div className={`cover-cup ${className}`}><div className="cover-cup-base" /><div className="cover-cup-body"><span>PG</span></div><div className="cover-cup-rim" /></div>;
@@ -14,9 +15,10 @@ function Compass() {
   </svg>;
 }
 export function BoxCover() {
+  const { t } = useI18n();
   return <div className="box-cover" aria-hidden="true">
     <div className="cover-lantern" />
-    <div className="cover-print"><span>ファントムジェム</span><i>Phantom Gem</i></div>
+    <div className="cover-print"><span>{t.cover.title}</span><i>Phantom Gem</i></div>
     <div className="cover-felt" />
     <Compass />
     <div className="cover-coins"><i /><i /><i /><i /><i /></div>
@@ -26,6 +28,6 @@ export function BoxCover() {
     <div className="cover-piece cover-thief"><PieceIcon kind="thief" /></div>
     <div className="cover-piece cover-poison"><PieceIcon kind="poison" /></div>
     <div className="cover-piece cover-mine"><PieceIcon kind="mining" /></div>
-    <div className="cover-colophon"><span>4つの席。2つのカップ。</span><span>中身は、せーので。</span></div>
+    <div className="cover-colophon"><span>{t.cover.line1}</span><span>{t.cover.line2}</span></div>
   </div>;
 }

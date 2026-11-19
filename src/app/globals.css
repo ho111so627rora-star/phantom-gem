@@ -7,3 +7,17 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .legal-shell{max-width:720px;margin:0 auto;padding:48px 24px 80px;min-height:100dvh}.legal-shell a{color:var(--gold);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--gold) 40%,transparent)}.legal-shell a:hover{color:var(--gold-light)}.legal-back{display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-bottom:28px;border:0!important}.legal-card{background:linear-gradient(160deg,var(--panel-light),var(--panel) 70%);border:1px solid color-mix(in srgb,var(--gold-deep) 55%,transparent);box-shadow:0 30px 80px #000000a0,inset 0 1px 0 #ffffff0c;padding:34px;border-radius:4px}.legal-card h1{font-family:var(--font-title);font-weight:600;font-size:clamp(22px,3vw,30px);color:var(--gold-light);margin:0 0 6px;letter-spacing:.5px}.legal-card h2{font-family:var(--font-title);font-weight:600;font-size:16px;color:var(--gold-light);margin:30px 0 8px}.legal-card p,.legal-card li{color:var(--muted);font-size:13px;line-height:1.9}.legal-card ul{margin:8px 0;padding-left:20px}.legal-meta{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.legal-contact{display:inline-flex;align-items:center;gap:10px;margin-top:6px;padding:14px 18px;background:var(--void);border:1px solid var(--line);border-radius:4px;font-size:13px;color:var(--text)}
 .footer-links{display:flex;gap:16px}.footer-links a{color:#6f8577;text-decoration:none}.footer-links a:hover{color:var(--gold-light)}
+/* Language picker */
+.language-modal{max-width:440px}
+.language-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 22px}
+.language-options button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:58px;padding:10px 14px;text-align:left;background:#00000030;border:1px solid var(--line);border-radius:3px;color:inherit;cursor:pointer;font:inherit}
+.language-options button:hover{border-color:color-mix(in srgb,var(--gold) 55%,transparent)}
+.language-options button.selected{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent)}
+.language-options span{display:flex;flex-direction:column;gap:2px}
+.language-options b{font-size:15px;color:var(--parchment)}
+.language-options small{font-size:11px;opacity:.6}
+.language-options svg{width:18px;color:var(--gold-light);flex:none}
+@media(max-width:370px){.language-options{grid-template-columns:1fr}}
+/* Script-appropriate serif fallbacks for the title face */
+:root:lang(ko){--font-title:var(--font-display),'Nanum Myeongjo','AppleMyungjo','Batang',serif}
+:root:lang(zh-CN){--font-title:var(--font-display),'Songti SC','STSong','SimSun','Noto Serif SC',serif}

@@ -1,6 +1,7 @@
 import { FlaskConical, Pickaxe, VenetianMask } from 'lucide-react';
 import type { Kind, Play } from '../game/types';
-import { LABELS, isJewel } from '../game/constants';
+import { isJewel } from '../game/constants';
+import { useI18n } from '../i18n';
 export function Gem({ kind = 'emerald', className = '' }: { kind?: Kind; className?: string }) {
   const props = { className: `gem-icon ${kind} ${className}`, 'aria-hidden': true as const };
   if (kind === 'thief') return <VenetianMask {...props} />;
@@ -17,7 +18,8 @@ export function Gem({ kind = 'emerald', className = '' }: { kind?: Kind; classNa
   </svg>;
 }
 export function DieFace({ play, hidden = false }: { play: Play | null; hidden?: boolean }) {
+  const { t } = useI18n();
   if (hidden) return <div className="cup"><span>PG</span></div>;
-  if (!play) return <div className="die-face empty"><span>—</span><small>パス</small></div>;
-  return <div className={`die-face ${play.kind}`}><Gem kind={play.kind} />{isJewel(play.kind) && <b>{play.value}</b>}<small>{LABELS[play.kind]}</small></div>;
+  if (!play) return <div className="die-face empty"><span>—</span><small>{t.pass}</small></div>;
+  return <div className={`die-face ${play.kind}`}><Gem kind={play.kind} />{isJewel(play.kind) && <b>{play.value}</b>}<small>{t.kinds[play.kind]}</small></div>;
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces } from 'next/font/google';
 import './globals.css';
+import { I18nProvider } from '../i18n';
 const fraunces = Fraunces({ subsets: ['latin'], weight: ['400', '600', '900'], style: ['normal', 'italic'], variable: '--font-display', display: 'swap' });
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 export const metadata: Metadata = {
@@ -11,4 +12,4 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'Phantom Gem' },
 };
 export const viewport: Viewport = { themeColor: '#080908', width: 'device-width', initialScale: 1, viewportFit: 'cover' };
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="ja" className={fraunces.variable}><body>{children}</body></html>; }
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) { return <html lang="ja" className={fraunces.variable}><body><I18nProvider>{children}</I18nProvider></body></html>; }
