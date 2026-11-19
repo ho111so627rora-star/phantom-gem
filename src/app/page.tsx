@@ -1,18 +1,21 @@
 'use client';
 import { roomFetch, homePath, basePath } from '../lib/api';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CircleHelp, LogOut, Gem as GemIcon, X, ArrowLeft } from 'lucide-react';
+import { CircleHelp, LogOut, Gem as GemIcon, X, ArrowLeft, Languages } from 'lucide-react';
 import type { RoomView, Session } from '../server/types';
 import { Home } from '../components/Home';
 import { Lobby } from '../components/Lobby';
 import { GameBoard } from '../components/GameBoard';
 import { Rules } from '../components/Rules';
 import { Bgm } from '../components/Bgm';
+import { LanguagePicker } from '../components/LanguagePicker';
+import { useI18n, translateError } from '../i18n';
 
 export default function Page() {
   const [session, setSession] = useState<Session | null>(null), [room, setRoom] = useState<RoomView | null>(null);
   const [rules, setRules] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const [revealing, setRevealing] = useState<number | null>(null), [leave, setLeave] = useState(false);
+  const [revealing, setRevealing] = useState<number | null>(null), [leave, setLeave] = useState(false), [language, setLanguage] = useState(false);
+  const { t } = useI18n();
   const previous = useRef<string | null>(null), requestVersion = useRef(0);
   useEffect(() => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
@@ -62,11 +65,12 @@ export default function Page() {
   function home() {
     try { sessionStorage.removeItem('jewel-hunt-session'); } catch { /* Storage may be unavailable. */ }
     setSession(null); setRoom(null); setLeave(false); setRevealing(null); setError(''); previous.current = null; history.replaceState({}, '', homePath); }
-  return <div className={`app-shell ${room?.game ? 'at-the-table' : 'front-room'}`}><header className="site-header"><button className="brand" onClick={() => session ? setLeave(true) : home()} aria-label="ファントムジェム ホーム"><GemIcon /><span>PHANTOM GEM<small>ファントムジェム</small></span></button><div className="header-actions"><Bgm inBattle={!!room?.game} />{room &&<span className="header-room">ROOM <b>{room.code}</b></span>}<button className="help-button" aria-label="遊び方" onClick={() => setRules(true)}><CircleHelp /><span>遊び方</span></button>{session && <button className="icon-button" onClick={() => setLeave(true)} aria-label="ホームに戻る"><LogOut /></button>}</div></header>
-    {error && <div className="error-banner" role="alert">{error}<button className="icon-button" onClick={() => setError('')} aria-label="通知を閉じる"><X /></button></div>}
-    {!session ? <Home onSession={saveSession} onRules={() => setRules(true)} /> : !room ? <main className="loading"><GemIcon /><h2>テーブルに接続しています…</h2><button className="text-button" onClick={home}><ArrowLeft />ホームへ戻る</button></main> : !room.game ? <Lobby room={room} act={act} busy={busy} /> : <GameBoard room={room} act={act} busy={busy} revealing={revealing} />}
-    <footer className="site-footer"><span>PHANTOM GEM</span><span>1〜4人のカップと宝石のゲーム</span><span className="footer-links"><a href={basePath + '/support/'}>サポート</a><a href={basePath + '/privacy/'}>プライバシーポリシー</a></span></footer>
+  return <div className={`app-shell ${room?.game ? 'at-the-table' : 'front-room'}`}><header className="site-header"><button className="brand" onClick={() => session ? setLeave(true) : home()} aria-label={t.header.homeAria}><GemIcon /><span>PHANTOM GEM<small>{t.header.brandSub}</small></span></button><div className="header-actions"><Bgm inBattle={!!room?.game} />{room &&<span className="header-room">{t.header.room} <b>{room.code}</b></span>}<button className="help-button" aria-label={t.header.help} onClick={() => setRules(true)}><CircleHelp /><span>{t.header.help}</span></button><button className="help-button language-button" aria-label={t.header.languageAria} aria-haspopup="dialog" onClick={() => setLanguage(true)}><Languages /><span>{t.header.language}</span></button>{session && <button className="icon-button" onClick={() => setLeave(true)} aria-label={t.header.backHomeAria}><LogOut /></button>}</div></header>
+    {error && <div className="error-banner" role="alert">{translateError(t, error)}<button className="icon-button" onClick={() => setError('')} aria-label={t.app.closeNotice}><X /></button></div>}
+    {!session ? <Home onSession={saveSession} onRules={() => setRules(true)} /> : !room ? <main className="loading"><GemIcon /><h2>{t.app.connectingTable}</h2><button className="text-button" onClick={home}><ArrowLeft />{t.app.backHome}</button></main> : !room.game ? <Lobby room={room} act={act} busy={busy} /> : <GameBoard room={room} act={act} busy={busy} revealing={revealing} />}
+    <footer className="site-footer"><span>PHANTOM GEM</span><span>{t.app.footerTagline}</span><span className="footer-links"><a href={basePath + '/support/'}>{t.app.support}</a><a href={basePath + '/privacy/'}>{t.app.privacy}</a></span></footer>
     {rules && <Rules onClose={() => setRules(false)} />}
-    {leave && <div className="modal-backdrop"><section className="modal leave-modal" role="dialog" aria-modal="true" aria-labelledby="leave-title"><h2 id="leave-title">ホームに戻りますか？</h2><p>ホームに戻ると、この対戦への参加情報は消えます。対戦を続ける場合は「ゲームを続ける」を選んでください。</p><button className="primary" onClick={home}>ホームへ戻る</button><button className="text-button" onClick={() => setLeave(false)}>ゲームを続ける</button></section></div>}
+    {language && <LanguagePicker onClose={() => setLanguage(false)} />}
+    {leave && <div className="modal-backdrop"><section className="modal leave-modal" role="dialog" aria-modal="true" aria-labelledby="leave-title"><h2 id="leave-title">{t.app.leaveTitle}</h2><p>{t.app.leaveBody}</p><button className="primary" onClick={home}>{t.app.leaveConfirm}</button><button className="text-button" onClick={() => setLeave(false)}>{t.app.leaveCancel}</button></section></div>}
   </div>;
 }
