@@ -48,7 +48,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const t = MESSAGES[lang];
   useEffect(() => {
     document.documentElement.lang = t.meta.htmlLang;
-    document.title = t.meta.title;
+    // Next.js re-writes its static (Japanese) metadata <title> after hydration, so re-apply ours whenever it changes.
+    const apply = () => { if (document.title !== t.meta.title) document.title = t.meta.title; };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
   }, [t]);
   const setLang = useCallback((next: Lang) => {
     setLangState(next);
